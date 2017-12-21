@@ -36,7 +36,7 @@
 #define MAX_NUMBER_OF_SPIKE_CHANNEL_SAMPLES 80
 #define CHECK_BUFFER_VALIDITY true
 #define SPIKE_EVENT_CODE 4;
-#define MAX_SPIKE_BUFFER_LEN 512 // max length of spike buffer in bytes
+#define MAX_SPIKE_BUFFER_LEN 520 // max length of spike buffer in bytes
                                  // the true max calculated from the spike values below is actually 507
 
 /** Class to store spike data in event channels */
@@ -93,6 +93,7 @@ struct SpikeObject
     uint16_t    data[MAX_NUMBER_OF_SPIKE_CHANNELS * MAX_NUMBER_OF_SPIKE_CHANNEL_SAMPLES];
     float       gain[MAX_NUMBER_OF_SPIKE_CHANNELS];
     uint16_t    threshold[MAX_NUMBER_OF_SPIKE_CHANNELS];
+	uint16_t	voltageScale[MAX_NUMBER_OF_SPIKE_CHANNELS];
 };
 
 

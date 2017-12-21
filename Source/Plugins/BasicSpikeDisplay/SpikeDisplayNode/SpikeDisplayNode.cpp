@@ -67,11 +67,11 @@ void SpikeDisplayNode::updateSettings()
             elec.currentSpikeIndex = 0;
             elec.mostRecentSpikes.ensureStorageAllocated (displayBufferSize);
 
-            for (int j = 0; j < elec.numChannels; ++j)
-            {
-                elec.displayThresholds.add  (0);
-                elec.detectorThresholds.add (0);
-            }
+            //for (int j = 0; j < elec.numChannels; ++j)
+            //{
+            //    elec.displayThresholds.add  (0);
+            //    elec.detectorThresholds.add (0);
+            //}
 
             electrodes.add (elec);
         }
@@ -209,7 +209,11 @@ void SpikeDisplayNode::process (AudioSampleBuffer& buffer, MidiBuffer& events)
                 e.displayThresholds.set (j,
                                          e.spikePlot->getDisplayThresholdForChannel (j));
 
+				e.spikePlot->setDisplayThresholdForChannel (j, e.detectorThresholds[j]);
+
                 e.spikePlot->setDetectorThresholdForChannel (j, e.detectorThresholds[j]);
+
+				//e.spikePlot->setRangeForChannel(j, e.voltageScale[j]);
             }
 
             // transfer buffered spikes to spike plot
@@ -254,6 +258,8 @@ void SpikeDisplayNode::handleEvent (int eventType, MidiMessage& event, int sampl
                 for (int i = 0; i < e.numChannels; ++i)
                 {
                     e.detectorThresholds.set (i, float (newSpike.threshold[i])); // / float(newSpike.gain[i]));
+
+					e.spikePlot->setRangeForChannel(i, float(newSpike.voltageScale[i]));
 
                     aboveThreshold = aboveThreshold | checkThreshold (i, e.displayThresholds[i], newSpike);
                 }

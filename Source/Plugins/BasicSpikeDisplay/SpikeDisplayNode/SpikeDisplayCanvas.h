@@ -193,7 +193,7 @@ private:
 
 */
 
-class SpikePlot : public Component, Button::Listener
+class SpikePlot : public Component
 {
 public:
     SpikePlot(SpikeDisplayCanvas*, int elecNum, int plotType, String name_);
@@ -225,7 +225,7 @@ public:
     float minWidth;
     float aspectRatio;
 
-    void buttonClicked(Button* button);
+    //void buttonClicked(Button* button);
 
     float getDisplayThresholdForChannel(int);
     void setDisplayThresholdForChannel(int axisNum, float threshold);
@@ -250,7 +250,7 @@ private:
 
     OwnedArray<ProjectionAxes> pAxes;
     OwnedArray<WaveAxes> wAxes;
-    OwnedArray<UtilityButton> rangeButtons;
+	OwnedArray<Label> rangeLabels;
     Array<float> ranges;
 
     void initLimits();

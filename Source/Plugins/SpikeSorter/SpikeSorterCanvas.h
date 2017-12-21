@@ -68,7 +68,7 @@ class RecordNode;
 
 */
 
-class SpikeSorterCanvas : public Visualizer, public Button::Listener
+class SpikeSorterCanvas : public Visualizer, public Button::Listener, public Label::Listener
 
 {
 public:
@@ -96,14 +96,18 @@ public:
     bool keyPressed(const KeyPress& key);
 
     void buttonClicked(Button* button);
+	void labelTextChanged(Label* label);
 
     void startRecording() { } // unused
     void stopRecording() { } // unused
 
     SpikeSorter* processor;
+	SpikeHistogramPlot* sp;
 
     ScopedPointer<UtilityButton> addPolygonUnitButton,
                   addUnitButton, delUnitButton, addBoxButton, delBoxButton, rePCAButton,nextElectrode,prevElectrode,newIDbuttons,deleteAllUnits;
+
+	ScopedPointer<Label> changeAllRanges, changeAllRangesLabel, changeAllThresholds, changeAllThresholdsLabel;
 
 private:
     void removeUnitOrBox();
@@ -229,7 +233,7 @@ public:
     void mouseExit(const MouseEvent& event);
     void mouseDown(const MouseEvent& event);
     void mouseDrag(const MouseEvent& event);
-    void mouseWheelMove(const MouseEvent& event, const MouseWheelDetails& wheel);
+    //void mouseWheelMove(const MouseEvent& event, const MouseWheelDetails& wheel);
     void mouseUp(const MouseEvent& event);
 
     void setRange(float);
@@ -357,7 +361,7 @@ private:
 };
 
 
-class SpikeHistogramPlot : public Component, Button::Listener
+class SpikeHistogramPlot : public Component, Label::Listener
 {
 public:
     SpikeHistogramPlot(SpikeSorter*, SpikeSorterCanvas*, int electrodeID, int plotType, String name_);
@@ -372,7 +376,7 @@ public:
 
     void setPolygonDrawingMode(bool on);
     void setPCARange(float p1min, float p2min, float p1max, float p2max);
-    void modifyRange(int index,bool up);
+    void modifyRange(int index,double range);
     void updateUnitsFromProcessor();
     void processSpikeObject(const SpikeObject& s);
 
@@ -394,14 +398,16 @@ public:
     float minWidth;
     float aspectRatio;
 
-    void buttonClicked(Button* button);
+	void labelTextChanged(Label* label);
 
     float getDisplayThresholdForChannel(int);
     void setDisplayThresholdForChannel(int channelNum, float thres);
     //void setDetectorThresholdForChannel(int, float);
 
+	//ScopedPointer<Label> changeAllRanges, changeAllRangesLabel, changeAllThresholds, changeAllThresholdsLabel;
+
 private:
-    void modifyRange(std::vector<float> values);
+    //void modifyRange(std::vector<float> values);
 
     int plotType;
     int nWaveAx;
@@ -416,7 +422,8 @@ private:
     SpikeSorter* processor;
     OwnedArray<PCAProjectionAxes> pAxes;
     OwnedArray<WaveformAxes> wAxes;
-    OwnedArray<UtilityButton> rangeButtons;
+    OwnedArray<Label> rangeLabels;
+	OwnedArray<Label> threshLabels;
     Array<float> ranges;
 
     void initLimits();

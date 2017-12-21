@@ -23,7 +23,6 @@
 
 #include "SpikeSorterCanvas.h"
 
-
 SpikeSorterCanvas::SpikeSorterCanvas(SpikeSorter* n) :
     processor(n), newSpike(false)
 {
@@ -81,6 +80,26 @@ SpikeSorterCanvas::SpikeSorterCanvas(SpikeSorter* n) :
     prevElectrode->setRadius(3.0f);
     prevElectrode->addListener(this);
     addAndMakeVisible(prevElectrode);
+
+	changeAllRanges = new Label("all ranges", "0");
+	changeAllRanges->setFont(Font("Small Text", 13, Font::plain));
+	changeAllRanges->setEditable(true);
+	changeAllRanges->addListener(this);
+	addAndMakeVisible(changeAllRanges);
+
+	changeAllRangesLabel = new Label("all ranges label", "Range");
+	changeAllRangesLabel->setFont(Font("Small Text", 13, Font::plain));
+	addAndMakeVisible(changeAllRangesLabel);
+
+	changeAllThresholds = new Label("all ranges", "0");
+	changeAllThresholds->setFont(Font("Small Text", 13, Font::plain));
+	changeAllThresholds->setEditable(true);
+	changeAllThresholds->addListener(this);
+	addAndMakeVisible(changeAllThresholds);
+
+	changeAllThresholdsLabel = new Label("all ranges label", "Thresh");
+	changeAllThresholdsLabel->setFont(Font("Small Text", 13, Font::plain));
+	addAndMakeVisible(changeAllThresholdsLabel);
 
     addAndMakeVisible(viewport);
 
@@ -159,6 +178,12 @@ void SpikeSorterCanvas::resized()
 
     newIDbuttons->setBounds(0, 270, 120,20);
     deleteAllUnits->setBounds(0, 300, 120,20);
+
+	changeAllRangesLabel->setBounds(0, 330, 60, 20);
+	changeAllRanges->setBounds(70, 330, 40, 20);
+
+	changeAllThresholdsLabel->setBounds(0, 360, 60, 20);
+	changeAllThresholds->setBounds(70, 360, 40, 20);
 
 }
 
@@ -406,9 +431,38 @@ void SpikeSorterCanvas::buttonClicked(Button* button)
     repaint();
 }
 
+void SpikeSorterCanvas::labelTextChanged(Label* label)
+{
 
+	Label* labelThatHasChanged = (Label*)label;
 
+	if (labelThatHasChanged == changeAllRanges) {
+		Value val = labelThatHasChanged->getTextValue();
+		double range = double(val.getValue());		
+		for (int k = 0; k < processor->getActiveElectrode()->numChannels; k++) {
+			processor->getActiveElectrode()->voltageScale[k] = (range*2);
+			update();
+		}
+	}
 
+	else if (labelThatHasChanged == changeAllThresholds) {
+		Value val = labelThatHasChanged->getTextValue();
+		double thresh = double(val.getValue());
+		for (int k = 0; k < processor->getActiveElectrode()->numChannels; k++) {
+			processor->getActiveElectrode()->thresholds[k] = thresh;
+			update();
+		}
+	}
+
+	else {
+		int thresh = 300;
+		for (int k = 0; k < processor->getActiveElectrode()->numChannels; k++) {
+			//processor->getActiveElectrode()->spikeSort->setDisplayThresholdForChannel(k, thresh);
+			processor->getActiveElectrode()->thresholds[k] = thresh;
+		}
+	}
+
+}
 
 // ----------------------------------------------------------------
 
@@ -557,12 +611,44 @@ SpikeHistogramPlot::SpikeHistogramPlot(SpikeSorter* prc,SpikeSorterCanvas* sdc, 
 
     for (int i = 0; i < nChannels; i++)
     {
-        UtilityButton* rangeButton = new UtilityButton(String(scales[i],0), Font("Small Text", 10, Font::plain));
-        rangeButton->setRadius(3.0f);
-        rangeButton->addListener(this);
-        addAndMakeVisible(rangeButton);
 
-        rangeButtons.add(rangeButton);
+		Label* rangeLabel = new Label("voltage range",String((scales[i]/2), 0));
+		rangeLabel->setFont(Font("Small Text", 15, Font::plain));
+		rangeLabel->setColour(Label::textColourId, Colours::black);
+		rangeLabel->setColour(Label::backgroundColourId, Colours::yellow);
+		//rangeLabel->setText(String(scales[i],0))
+		rangeLabel->setEditable(true);
+		rangeLabel->addListener(this);
+		addAndMakeVisible(rangeLabel);
+
+        //UtilityButton* rangeButton = new UtilityButton(String(scales[i],0), Font("Small Text", 10, Font::plain));
+        //rangeButton->setRadius(3.0f);
+        //rangeButton->addListener(this);
+        //addAndMakeVisible(rangeButton);
+
+        rangeLabels.add(rangeLabel);
+
+		double thresh = processor->getChannelThreshold(electrodeID-1, i);
+
+		//double thresh = 0;
+
+		Label* threshLabel = new Label("threshold", String(thresh, 0));
+		threshLabel->setFont(Font("Small Text", 15, Font::plain));
+		threshLabel->setColour(Label::textColourId, Colours::black);
+		threshLabel->setColour(Label::backgroundColourId, Colours::yellow);
+		//threshLabel->setText(String(scales[i],0))
+		threshLabel->setEditable(true);
+		threshLabel->addListener(this);
+		addAndMakeVisible(threshLabel);
+
+		//UtilityButton* rangeButton = new UtilityButton(String(scales[i],0), Font("Small Text", 10, Font::plain));
+		//rangeButton->setRadius(3.0f);
+		//rangeButton->addListener(this);
+		//addAndMakeVisible(rangeButton);
+
+		threshLabels.add(threshLabel);
+
+
     }
 
 }
@@ -735,83 +821,137 @@ void SpikeHistogramPlot::resized()
     for (int i = 0; i < nWaveAx; i++)
     {
         wAxes[i]->setBounds(5 + (i % nWaveCols) * axesWidth/nWaveCols, 20 + (i/nWaveCols) * axesHeight, axesWidth/nWaveCols, axesHeight);
-        rangeButtons[i]->setBounds(8 + (i % nWaveCols) * axesWidth/nWaveCols,
+        rangeLabels[i]->setBounds(8 + (i % nWaveCols) * axesWidth/nWaveCols,
                                    20 + (i/nWaveCols) * axesHeight + axesHeight - 18,
                                    35, 15);
+
+		threshLabels[i]->setBounds(axesWidth/nWaveCols - 40 + (i % nWaveCols) * axesWidth / nWaveCols,
+			20 + (i / nWaveCols) * axesHeight + axesHeight - 18,
+			35, 15);
     }
+
+	//changeAllRangesLabel->setBounds(8 +  axesWidth / nWaveCols,
+	//	20 +  axesHeight + 2*axesHeight,
+	//	35, 15);
+	//changeAllRanges->setBounds(40 + axesWidth / nWaveCols,
+	//	20 + axesHeight + 2 * axesHeight,
+	//	35, 15);
+
+	//changeAllThresholdsLabel->setBounds(100, 360, 60, 20);
+	//changeAllThresholds->setBounds(170, 360, 40, 20);
+
     pAxes[0]->setBounds(5 +  axesWidth, 20 + 0, width/2, height);
 
+	//repaint();
+
 
 }
 
 
 
-void SpikeHistogramPlot::modifyRange(std::vector<float> values)
+//void SpikeHistogramPlot::modifyRange(std::vector<float> values)
+//{
+//    const int NUM_RANGE = 7;
+//    float range_array[NUM_RANGE] = {100,250,500,750,1000,1250,1500};
+//    String label;
+//    int newIndex = 0;
+//
+//    for (int index = 0; index < nChannels; index++)
+//    {
+//        for (int k = 0; k < NUM_RANGE; k++)
+//        {
+//            if (std::abs(values[index] - range_array[k]) < 0.1)
+//            {
+//                newIndex = k;
+//                break;
+//            }
+//        }
+//
+//        ranges.set(index, range_array[newIndex]);
+//        String label = String(range_array[newIndex],0);
+//        rangeLabels[index]->setText(label);
+//    }
+//    setLimitsOnAxes();
+//}
+
+
+void SpikeHistogramPlot::modifyRange(int index,double range)
 {
-    const int NUM_RANGE = 7;
-    float range_array[NUM_RANGE] = {100,250,500,750,1000,1250,1500};
-    String label;
-    int newIndex = 0;
+    //const int NUM_RANGE = 7;
+    //float range_array[NUM_RANGE] = {100,250,500,750,1000,1250,1500};
 
-    for (int index = 0; index < nChannels; index++)
-    {
-        for (int k = 0; k < NUM_RANGE; k++)
-        {
-            if (std::abs(values[index] - range_array[k]) < 0.1)
-            {
-                newIndex = k;
-                break;
-            }
-        }
-
-        ranges.set(index, range_array[newIndex]);
-        String label = String(range_array[newIndex],0);
-        rangeButtons[index]->setLabel(label);
-    }
+    //String label;
+    //for (int k = 0; k < NUM_RANGE; k++)
+    //{
+    //    if (std::abs(ranges[index] - range_array[k]) < 0.1)
+    //    {
+    //        int newIndex;
+    //        if (up)
+    //            newIndex  = (k + 1) % NUM_RANGE;
+    //        else
+    //        {
+    //            newIndex  = (k - 1);
+    //            if (newIndex < 0)
+    //                newIndex  = NUM_RANGE-1;
+    //        }
+    
+    //String label = range;
+	ranges.set(index, range);
+    //rangeLabels[index]->setText(label);
     setLimitsOnAxes();
-}
 
-
-void SpikeHistogramPlot::modifyRange(int index,bool up)
-{
-    const int NUM_RANGE = 7;
-    float range_array[NUM_RANGE] = {100,250,500,750,1000,1250,1500};
-    String label;
-    for (int k = 0; k < NUM_RANGE; k++)
-    {
-        if (std::abs(ranges[index] - range_array[k]) < 0.1)
-        {
-            int newIndex;
-            if (up)
-                newIndex  = (k + 1) % NUM_RANGE;
-            else
-            {
-                newIndex  = (k - 1);
-                if (newIndex < 0)
-                    newIndex  = NUM_RANGE-1;
-            }
-            ranges.set(index, range_array[newIndex]);
-            String label = String(range_array[newIndex],0);
-            rangeButtons[index]->setLabel(label);
-            setLimitsOnAxes();
-
-            processor->setElectrodeVoltageScale(electrodeID, index, range_array[newIndex]);
-            return;
-        }
-
-    }
+    processor->setElectrodeVoltageScale(electrodeID, index, range);
+    return;
     // we shoudl never reach here.
     jassert(false);
     return ;
 
 }
 
-void SpikeHistogramPlot::buttonClicked(Button* button)
+void SpikeHistogramPlot::labelTextChanged(Label* label)
 {
-    UtilityButton* buttonThatWasClicked = (UtilityButton*) button;
+    Label* labelThatHasChanged = (Label*) label;
 
-    int index = rangeButtons.indexOf(buttonThatWasClicked);
-    modifyRange(index,true);
+
+	//if (label == changeAllRanges) {
+	//	Value val = label->getTextValue();
+	//	double range = double(val.getValue());
+	//	//int electrodeID = processor->getActiveElectrode()->electrodeID;
+	//	//int start_ind = (electrodeID - 1) * processor->getActiveElectrode()->numChannels;
+	//	for (int k = 0; k < processor->getActiveElectrode()->numChannels; k++) {
+	//		modifyRange(k, range);
+	//	}
+	//}
+
+	//else if (label == changeAllThresholds) {
+	//	Value val = label->getTextValue();
+	//	double thresh = double(val.getValue());
+	//	//int electrodeID = processor->getActiveElectrode()->electrodeID;
+	//	//int start_ind = (electrodeID - 1) * processor->getActiveElectrode()->numChannels;
+	//	for (int k = 0; k < processor->getActiveElectrode()->numChannels; k++) {
+	//		setDisplayThresholdForChannel(k, thresh);
+	//		processor->getActiveElectrode()->thresholds[k] = thresh;
+	//		repaint();
+	//	}
+	//}
+
+	int index = rangeLabels.indexOf(labelThatHasChanged);
+	if (index != -1) {
+
+		Value val = label->getTextValue();
+		double range = double(val.getValue());
+		modifyRange(index, (range*2));
+	}
+
+	else {
+		int index = threshLabels.indexOf(labelThatHasChanged);
+		Value val = label->getTextValue();
+		double thresh = double(val.getValue());
+		setDisplayThresholdForChannel(index, thresh);
+		processor->getActiveElectrode()->thresholds[index] = thresh;
+		repaint();
+
+	}
 
 }
 
@@ -1045,15 +1185,15 @@ WaveformAxes::WaveformAxes(SpikeHistogramPlot* plt, SpikeSorter* p,int electrode
     }
 }
 
-void WaveformAxes::mouseWheelMove(const MouseEvent& event, const MouseWheelDetails& wheel)
-{
-    // weirdly enough, sometimes we get twice of this event even though a single wheel move was made...
-    if (wheel.deltaY < 0)
-        spikeHistogramPlot->modifyRange(channel, true);
-    else
-        spikeHistogramPlot->modifyRange(channel, false);
-
-}
+//void WaveformAxes::mouseWheelMove(const MouseEvent& event, const MouseWheelDetails& wheel)
+//{
+//    // weirdly enough, sometimes we get twice of this event even though a single wheel move was made...
+//    if (wheel.deltaY < 0)
+//        spikeHistogramPlot->modifyRange(channel, true);
+//    else
+//        spikeHistogramPlot->modifyRange(channel, false);
+//
+//}
 
 void WaveformAxes::setSignalFlip(bool state)
 {
@@ -1316,6 +1456,11 @@ void WaveformAxes::mouseUp(const MouseEvent& event)
         // send a message to processor to update its internal structure?
         Electrode* e = processor->getActiveElectrode();
         e->spikeSort->updateBoxUnits(units);
+
+		SpikeSorterEditor* edt = (SpikeSorterEditor*)processor->getEditor();
+
+		edt->spikeSorterCanvas->update();
+
     }
     // if (isOverThresholdSlider)
     // {
@@ -1466,6 +1611,7 @@ void WaveformAxes::mouseDrag(const MouseEvent& event)
         // update processor
         processor->getActiveElectrode()->thresholds[channel] = displayThresholdLevel;
         SpikeSorterEditor* edt = (SpikeSorterEditor*) processor->getEditor();
+
         for (int k=0; k<processor->getActiveElectrode()->numChannels; k++)
             edt->electrodeButtons[k]->setToggleState(false, dontSendNotification);
 
@@ -1489,6 +1635,7 @@ void WaveformAxes::mouseExit(const MouseEvent& event)
     {
         isOverThresholdSlider = false;
         thresholdColour = Colours::red;
+
         repaint();
     }
 }

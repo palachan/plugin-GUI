@@ -92,6 +92,9 @@ int packSpike(const SpikeObject* s, uint8_t* buffer, int bufferSize)
     memcpy(buffer+idx, &(s->threshold), s->nChannels * 2);
     idx += s->nChannels * 2;
 
+	memcpy(buffer + idx, &(s->voltageScale), s->nChannels * 2);
+	idx += s->nChannels * 2;
+
     if (idx >= MAX_SPIKE_BUFFER_LEN)
     {
         std::cout << "Spike is larger than it should be. Size was: " << idx
@@ -192,6 +195,9 @@ bool unpackSpike(SpikeObject* s, const uint8_t* buffer, int bufferSize)
 
     memcpy(&(s->threshold), buffer+idx, s->nChannels *2);
     idx += s->nChannels * 2;
+
+	memcpy(&(s->voltageScale), buffer + idx, s->nChannels * 2);
+	idx += s->nChannels * 2;
 
     //if (idx >= bufferSize)
     //    std::cout << "Buffer Overrun! More data extracted than was given!" << std::endl;
@@ -297,6 +303,7 @@ void generateSimulatedSpike(SpikeObject* s, uint64_t timestamp, int noise)
     {
         s->gain[i] = gain;
         s->threshold[i] = 4000;
+		s->voltageScale[i] = 8000;
         double scaleExponent = (double)(rand()%26+2) / 10.0f;  // Scale the wave between 50% and 150%
 
         for (int j=0; j<32; j++)
@@ -335,6 +342,7 @@ void generateEmptySpike(SpikeObject* s, int nChannels, int numSamples)
     {
         s->gain[i] = 0.0;
         s->threshold[i] = 0;
+		s->voltageScale[i] = 0;
         for (int j=0; j<s->nSamples; j++)
         {
             s->data[idx] = 0;

@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include "NetworkEvents.h"
 #include "NetworkEventsEditor.h"
+#include <string>
 
 
 const int MAX_MESSAGE_LENGTH = 64000;
@@ -533,7 +534,8 @@ String NetworkEvents::handleSpecialMessages (StringTS msg)
         return status;
     }
 
-    return String ("NotHandled");
+    String soft_ts = std::to_string(CoreServices::getGlobalTimestamp());
+	return soft_ts;
 }
 
 

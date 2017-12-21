@@ -75,7 +75,9 @@ def run(hostname='localhost', port=5557):
 
                     etype = ord(parts[0])
                     timestamp_seconds = struct.unpack('d', parts[1])[0]
+                    print(struct.unpack('d', parts[1]))
                     body = parts[2]
+                    
 
                     if etype == SPIKE:
                         spike, body = unpack_spike(body)
@@ -84,7 +86,7 @@ def run(hostname='localhost', port=5557):
 
                     else:
                         header, body = unpack_standard(body)
-    
+                        print(header)
                         if etype == TTL:
                             word, body = unpack_ttl(body)
                             print('%g: TTL: Channel %d: %s' %

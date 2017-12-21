@@ -149,7 +149,7 @@ private:
 class Electrode
 {
 public:
-    Electrode(int electrodeID, UniqueIDgenerator* uniqueIDgenerator_, PCAcomputingThread* pth,String _name, int _numChannels, int* _channels, float default_threshold, int pre, int post, float samplingRate , int sourceNodeId);
+    Electrode(int electrodeID, UniqueIDgenerator* uniqueIDgenerator_, PCAcomputingThread* pth,String _name, int _numChannels, int* _channels, float default_threshold, float default_voltageScale, int pre, int post, float samplingRate , int sourceNodeId);
     ~Electrode();
 
     void resizeWaveform(int numPre, int numPost);
@@ -398,6 +398,8 @@ private:
     AudioSampleBuffer* dataBuffer;
 
     float getDefaultThreshold();
+
+	float getDefaultvoltageScale();
 
     int overflowBufferSize;
 

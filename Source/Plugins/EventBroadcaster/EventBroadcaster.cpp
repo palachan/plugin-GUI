@@ -114,10 +114,11 @@ void EventBroadcaster::handleEvent(int eventType, MidiMessage& event, int sample
     }
     
     double timestampSeconds = double(timestamp) / currentSampleRate;
+    double timestampRaw = double(timestamp);
 
 #ifdef ZEROMQ
     if (-1 == zmq_send(zmqSocket.get(), &type, sizeof(type), ZMQ_SNDMORE) ||
-        -1 == zmq_send(zmqSocket.get(), &timestampSeconds, sizeof(timestampSeconds), ZMQ_SNDMORE) ||
+        -1 == zmq_send(zmqSocket.get(), &timestampRaw, sizeof(timestampRaw), ZMQ_SNDMORE) ||
         -1 == zmq_send(zmqSocket.get(), buffer + 1, event.getRawDataSize() - 1, 0) /* Omit event type */)
     {
         std::cout << "Failed to send message: " << zmq_strerror(zmq_errno()) << std::endl;

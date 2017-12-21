@@ -214,7 +214,7 @@ Electrode::~Electrode()
 
 }
 
-Electrode::Electrode(int ID, UniqueIDgenerator* uniqueIDgenerator_, PCAcomputingThread* pth, String _name, int _numChannels, int* _channels, float default_threshold, int pre, int post, float samplingRate , int sourceNodeId)
+Electrode::Electrode(int ID, UniqueIDgenerator* uniqueIDgenerator_, PCAcomputingThread* pth, String _name, int _numChannels, int* _channels, float default_threshold, float default_voltageScale, int pre, int post, float samplingRate , int sourceNodeId)
 {
     electrodeID = ID;
     computingThread = pth;
@@ -239,7 +239,7 @@ Electrode::Electrode(int ID, UniqueIDgenerator* uniqueIDgenerator_, PCAcomputing
         channels[i] = _channels[i];
         thresholds[i] = default_threshold;
         isActive[i] = true;
-        voltageScale[i] = 500;
+        voltageScale[i] = default_voltageScale;
     }
     spikePlot = nullptr;
 
@@ -439,7 +439,7 @@ bool SpikeSorter::addElectrode(int nChans, String name, double Depth)
     for (int k = 0; k < nChans; k++)
         chans[k] = firstChan + k;
 
-    Electrode* newElectrode = new Electrode(++uniqueID, &uniqueIDgenerator, &computingThread, name, nChans, chans, getDefaultThreshold(),
+	Electrode* newElectrode = new Electrode(++uniqueID, &uniqueIDgenerator, &computingThread, name, nChans, chans, getDefaultThreshold(), getDefaultvoltageScale(),
                                             numPreSamples, numPostSamples, getSampleRate(), channels[chans[0]]->sourceNodeId);
 
     newElectrode->depthOffsetMM = Depth;
@@ -467,6 +467,11 @@ bool SpikeSorter::addElectrode(int nChans, String name, double Depth)
 float SpikeSorter::getDefaultThreshold()
 {
     return -20.0f;
+}
+
+float SpikeSorter::getDefaultvoltageScale()
+{
+	return 500.0f;
 }
 
 StringArray SpikeSorter::getElectrodeNames()
@@ -980,6 +985,8 @@ void SpikeSorter::process(AudioSampleBuffer& buffer,
                                                      i,
                                                      channel);
 
+							newSpike.voltageScale[channel] = electrode->voltageScale[channel];
+
                             //std::cout << "adding waveform" << std::endl;
                         }
 
@@ -1252,6 +1259,7 @@ void SpikeSorter::saveCustomParametersToXml(XmlElement* parentElement)
             channelNode->setAttribute("ch",*(electrodes[i]->channels+j));
             channelNode->setAttribute("thresh",*(electrodes[i]->thresholds+j));
             channelNode->setAttribute("isActive",*(electrodes[i]->isActive+j));
+			channelNode->setAttribute("voltageScale", *(electrodes[i]->voltageScale + j));
 
         }
 
@@ -1324,6 +1332,7 @@ void SpikeSorter::loadCustomParametersFromXml()
                         int* channels = new int[channelsPerElectrode];
                         float* thres = new float[channelsPerElectrode];
                         bool* isActive = new bool[channelsPerElectrode];
+						float* voltageScale = new float[channelsPerElectrode];
 
                         forEachXmlChildElement(*xmlNode, channelNode)
                         {
@@ -1333,17 +1342,19 @@ void SpikeSorter::loadCustomParametersFromXml()
                                 channels[channelIndex] = channelNode->getIntAttribute("ch");
                                 thres[channelIndex] = channelNode->getDoubleAttribute("thresh");
                                 isActive[channelIndex] = channelNode->getBoolAttribute("isActive");
+								voltageScale[channelIndex] = channelNode->getDoubleAttribute("voltageScale");
                             }
                         }
 
                         int sourceNodeId = 102010; // some number
 
-                        Electrode* newElectrode = new Electrode(electrodeID, &uniqueIDgenerator,&computingThread, electrodeName, channelsPerElectrode, channels,getDefaultThreshold(),
+						Electrode* newElectrode = new Electrode(electrodeID, &uniqueIDgenerator, &computingThread, electrodeName, channelsPerElectrode, channels, getDefaultThreshold(), getDefaultvoltageScale(),
                                                                 numPreSamples,numPostSamples, getSampleRate(), sourceNodeId);
                         for (int k=0; k<channelsPerElectrode; k++)
                         {
                             newElectrode->thresholds[k] = thres[k];
                             newElectrode->isActive[k] = isActive[k];
+							newElectrode->voltageScale[k] = voltageScale[k];
                         }
 
                         newElectrode->advancerID = advancerID;

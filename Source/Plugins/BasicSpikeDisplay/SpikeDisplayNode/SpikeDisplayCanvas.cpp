@@ -550,12 +550,22 @@ SpikePlot::SpikePlot(SpikeDisplayCanvas* sdc, int elecNum, int p, String name_) 
 
     for (int i = 0; i < nChannels; i++)
     {
-        UtilityButton* rangeButton = new UtilityButton("250", Font("Small Text", 10, Font::plain));
-        rangeButton->setRadius(3.0f);
-        rangeButton->addListener(this);
-        addAndMakeVisible(rangeButton);
 
-        rangeButtons.add(rangeButton);
+		Label* rangeLabel = new Label("voltage range", "0");
+		rangeLabel->setFont(Font("Small Text", 10, Font::plain));
+		rangeLabel->setColour(Label::textColourId, Colours::black);
+		rangeLabel->setColour(Label::backgroundColourId, Colours::yellow);
+		//rangeLabel->setText(String(scales[i],0))
+		rangeLabel->setEditable(false);
+		//rangeLabel->addListener(this);
+		addAndMakeVisible(rangeLabel);
+
+  //      UtilityButton* rangeButton = new UtilityButton("250", Font("Small Text", 10, Font::plain));
+  //      rangeButton->setRadius(3.0f);
+  //      rangeButton->addListener(this);
+  //      addAndMakeVisible(rangeButton);
+
+        rangeLabels.add(rangeLabel);
     }
 
 }
@@ -683,7 +693,7 @@ void SpikePlot::resized()
     for (int i = 0; i < nWaveAx; i++)
     {
         wAxes[i]->setBounds(5 + (i % nWaveCols) * axesWidth/nWaveCols, 20 + (i/nWaveCols) * axesHeight, axesWidth/nWaveCols, axesHeight);
-        rangeButtons[i]->setBounds(8 + (i % nWaveCols) * axesWidth/nWaveCols,
+        rangeLabels[i]->setBounds(8 + (i % nWaveCols) * axesWidth/nWaveCols,
                                    20 + (i/nWaveCols) * axesHeight + axesHeight - 18,
                                    25, 15);
     }
@@ -694,34 +704,34 @@ void SpikePlot::resized()
 
 }
 
-void SpikePlot::buttonClicked(Button* button)
-{
-    UtilityButton* buttonThatWasClicked = (UtilityButton*) button;
-
-    int index = rangeButtons.indexOf(buttonThatWasClicked);
-    String label;
-
-    if (ranges[index] == 250.0f)
-    {
-        ranges.set(index, 500.0f);
-        label = "500";
-    }
-    else if (ranges[index] == 500.0f)
-    {
-        ranges.set(index, 100.0f);
-        label = "100";
-    }
-    else if (ranges[index] == 100.0f)
-    {
-        ranges.set(index, 250.0f);
-        label = "250";
-    }
-
-    buttonThatWasClicked->setLabel(label);
-
-    setLimitsOnAxes();
-
-}
+//void SpikePlot::buttonClicked(Button* button)
+//{
+//    UtilityButton* buttonThatWasClicked = (UtilityButton*) button;
+//
+//    int index = rangeButtons.indexOf(buttonThatWasClicked);
+//    String label;
+//
+//    if (ranges[index] == 250.0f)
+//    {
+//        ranges.set(index, 500.0f);
+//        label = "500";
+//    }
+//    else if (ranges[index] == 500.0f)
+//    {
+//        ranges.set(index, 100.0f);
+//        label = "100";
+//    }
+//    else if (ranges[index] == 100.0f)
+//    {
+//        ranges.set(index, 250.0f);
+//        label = "250";
+//    }
+//
+//    buttonThatWasClicked->setLabel(label);
+//
+//    setLimitsOnAxes();
+//
+//}
 
 void SpikePlot::setLimitsOnAxes()
 {
@@ -803,7 +813,7 @@ void SpikePlot::setRangeForChannel(int i, float range)
 {
     std::cout << "Setting range to " << range << std::endl;
     wAxes[i]->setRange(range);
-    rangeButtons[i]->setLabel(String(int(range)));
+    rangeLabels[i]->setText(String(int(range/2)),dontSendNotification);
 }
 
 void SpikePlot::setDetectorThresholdForChannel(int i, float t)
@@ -831,22 +841,22 @@ void SpikePlot::setAllThresholds(float displayThreshold, float range)
         wAxes[i]->setDisplayThreshold(displayThreshold);
     }
 
-    if (range == 100)
-    {
-        label = "100";
-    }
-    else if (range == 250)
-    {
-        label = "250";
-    }
-    else
-    {
-        label = "500";
-    }
+    //if (range == 100)
+    //{
+    //    label = "100";
+    //}
+    //else if (range == 250)
+    //{
+    //    label = "250";
+    //}
+    //else
+    //{
+    //    label = "500";
+    //}
 
-    for (int i=0; i < rangeButtons.size(); i++)
+    for (int i=0; i < rangeLabels.size(); i++)
     {
-        rangeButtons[i]->setLabel(label);
+        rangeLabels[i]->setText(String(int(range/2)),dontSendNotification);
     }
 
     setLimitsOnAxes();
